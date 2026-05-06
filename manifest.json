@@ -2,7 +2,7 @@
   "name": "Bike Fuel Tracker",
   "short_name": "Fuel Tracker",
   "description": "Track your bike's fuel efficiency, trip history, and costs",
-  "start_url": "/",
+  "start_url": "/Fuel-Tracker/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
