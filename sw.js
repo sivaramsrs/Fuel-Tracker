@@ -1,16 +1,14 @@
 const CACHE = 'fuel-tracker-v1';
 const FILES = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  '/Fuel-Tracker/',
+  '/Fuel-Tracker/index.html',
+  '/Fuel-Tracker/manifest.json',
+  '/Fuel-Tracker/icon-192.png',
+  '/Fuel-Tracker/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(FILES))
-  );
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
   self.skipWaiting();
 });
 
