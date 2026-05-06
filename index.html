@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Fuel Tracker" />
+  <meta name="theme-color" content="#1c1c1e" />
+  <title>Bike Fuel Tracker</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+
+  <style>
+    :root {
+      --color-background-primary:   #ffffff;
+      --color-background-secondary: #f2f2f7;
+      --color-background-tertiary:  #e5e5ea;
+      --color-background-success:   #eaf3de;
+      --color-background-danger:    #fcebeb;
+      --color-text-primary:         #1c1c1e;
+      --color-text-secondary:       #6d6d72;
+      --color-text-tertiary:        #aeaeb2;
+      --color-text-success:         #3b6d11;
+      --color-text-danger:          #a32d2d;
+      --color-border-secondary:     #c7c7cc;
+      --color-border-tertiary:      #e5e5ea;
+      --color-border-danger:        #f5b7b7;
+      --border-radius-md:           10px;
+      --border-radius-lg:           14px;
+      --sat: env(safe-area-inset-top);
+      --sab: env(safe-area-inset-bottom);
+      --sal: env(safe-area-inset-left);
+      --sar: env(safe-area-inset-right);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background-primary:   #1c1c1e;
+        --color-background-secondary: #2c2c2e;
+        --color-background-tertiary:  #3a3a3c;
+        --color-background-success:   #1a2e0f;
+        --color-background-danger:    #2e0f0f;
+        --color-text-primary:         #f2f2f7;
+        --color-text-secondary:       #aeaeb2;
+        --color-text-tertiary:        #6d6d72;
+        --color-text-success:         #7ecb4a;
+        --color-text-danger:          #f28b8b;
+        --color-border-secondary:     #48484a;
+        --color-border-tertiary:      #3a3a3c;
+        --color-border-danger:        #6b2020;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: var(--color-background-secondary);
+      color: var(--color-text-primary);
+      -webkit-text-size-adjust: 100%;
+      min-height: 100dvh;
+    }
+
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      padding:
+        calc(var(--sat) + 1.25rem)
+        calc(var(--sar) + 1.25rem)
+        calc(var(--sab) + 2rem)
+        calc(var(--sal) + 1.25rem);
+      background: var(--color-background-primary);
+      min-height: 100dvh;
+    }
+
+    button {
+      min-height: 44px;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+      cursor: pointer;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      background: var(--color-background-secondary);
+      color: var(--color-text-primary);
+      font-family: inherit;
+      font-size: 15px;
+      padding: 0 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.15s;
+    }
+    button:active { opacity: 0.7; }
+
+    input[type="number"], input[type="text"] {
+      font-size: 16px;
+      -webkit-appearance: none;
+      appearance: none;
+      border-radius: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .tab-btn {
+      flex: 1; padding: 6px 0; font-size: 13px;
+      border: none; border-radius: 6px; cursor: pointer;
+      transition: all 0.15s; min-height: 36px;
+    }
+    .tab-btn.active {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      font-weight: 500; color: var(--color-text-primary);
+    }
+    .tab-btn.inactive {
+      background: transparent; font-weight: 400;
+      color: var(--color-text-secondary); border: none;
+    }
+
+    .field-card {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-lg);
+      padding: 1rem 1.25rem;
+    }
+    .field-card input[type="number"],
+    .field-card input[type="text"] {
+      flex: 1; font-size: 22px; font-weight: 500;
+      border: none; outline: none; background: transparent;
+      color: var(--color-text-primary); padding: 0; width: 100%;
+    }
+
+    .metric-card {
+      background: var(--color-background-secondary);
+      border-radius: var(--border-radius-md); padding: 1rem;
+    }
+    .trip-row {
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-lg);
+      padding: 0.875rem 1rem;
+    }
+    .thresh-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+    }
+    .thresh-row:last-child { border-bottom: none; }
+    .thresh-input {
+      width: 64px; font-size: 15px; font-weight: 500;
+      text-align: right;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      padding: 5px 8px;
+      background: var(--color-background-primary);
+      color: var(--color-text-primary); outline: none;
+    }
+
+    /* Install banner */
+    #install-banner {
+      display: none;
+      align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: var(--color-background-secondary);
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-md);
+      margin-bottom: 1rem;
+    }
+    #install-banner p { margin: 0; font-size: 13px; color: var(--color-text-secondary); flex: 1; }
+    #install-banner button { min-height: 32px; font-size: 13px; padding: 0 12px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- iOS install hint (shown only in Safari, not in standalone mode) -->
+  <div id="install-banner">
+    <i class="ti ti-download" style="font-size:20px; color:var(--color-text-secondary); flex-shrink:0;" aria-hidden="true"></i>
+    <p>Tap <strong>Share → Add to Home Screen</strong> to install this app</p>
+    <button onclick="document.getElementById('install-banner').style.display='none'" style="background:transparent; border:none; color:var(--color-text-tertiary); padding:4px; min-height:unset;">✕</button>
+  </div>
+
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:1.5rem;">
+    <div style="width:36px; height:36px; border-radius:50%; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+      <i class="ti ti-motorbike" style="font-size:18px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+    </div>
+    <div>
+      <p style="font-size:15px; font-weight:500; margin:0; color:var(--color-text-primary);">Fuel efficiency</p>
+      <p style="font-size:12px; color:var(--color-text-secondary); margin:0;">Track your bike's performance</p>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:4px; margin-bottom:1.5rem; background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:4px;">
+    <button class="tab-btn active" id="nav-calc" onclick="showTab('calc')">Calculator</button>
+    <button class="tab-btn inactive" id="nav-hist" onclick="showTab('hist')">
+      Trip history <span id="hist-count" style="display:none; background:var(--color-background-tertiary); border-radius:10px; font-size:11px; padding:1px 6px; margin-left:4px;"></span>
+    </button>
+    <button class="tab-btn inactive" id="nav-settings" onclick="showTab('settings')">
+      <i class="ti ti-adjustments-horizontal" style="font-size:14px; vertical-align:-2px;" aria-hidden="true"></i> Ratings
+    </button>
+  </div>
+
+  <!-- CALCULATOR TAB -->
+  <div id="tab-calc">
+    <div style="display:flex; gap:4px; margin-bottom:1.5rem; background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:4px;">
+      <button class="tab-btn active" id="btn-km" onclick="setUnit('metric')">KM / Litre</button>
+      <button class="tab-btn inactive" id="btn-mi" onclick="setUnit('imperial')">Miles / Gallon</button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:1.5rem;">
+      <div class="field-card">
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:8px;" for="distance">
+          <i class="ti ti-road" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>Distance travelled
+        </label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="number" id="distance" placeholder="0" min="0" step="0.1" inputmode="decimal" />
+          <span id="dist-unit" style="font-size:14px; color:var(--color-text-secondary); white-space:nowrap;">km</span>
+        </div>
+      </div>
+      <div class="field-card">
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:8px;" for="fuel">
+          <i class="ti ti-droplet" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>Fuel used
+        </label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="number" id="fuel" placeholder="0" min="0" step="0.01" inputmode="decimal" />
+          <span id="fuel-unit" style="font-size:14px; color:var(--color-text-secondary); white-space:nowrap;">litres</span>
+        </div>
+      </div>
+      <div class="field-card">
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:8px;" for="cost">
+          <i class="ti ti-currency-rupee" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>Fuel price <span style="font-style:italic; font-weight:400;">(optional)</span>
+        </label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="number" id="cost" placeholder="0" min="0" step="0.01" inputmode="decimal" />
+          <span id="cost-unit" style="font-size:14px; color:var(--color-text-secondary); white-space:nowrap;">per litre</span>
+        </div>
+      </div>
+      <div class="field-card">
+        <label style="font-size:12px; color:var(--color-text-secondary); display:block; margin-bottom:8px;" for="trip-name">
+          <i class="ti ti-tag" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>Trip name <span style="font-style:italic; font-weight:400;">(optional)</span>
+        </label>
+        <input type="text" id="trip-name" placeholder="e.g. Morning commute" maxlength="30"
+          style="font-size:16px; border:none; outline:none; background:transparent; color:var(--color-text-primary); padding:0; width:100%;" />
+      </div>
+    </div>
+    <button onclick="calculate()" style="width:100%; font-weight:500; margin-bottom:8px;">
+      <i class="ti ti-calculator" style="font-size:14px;" aria-hidden="true"></i>Calculate &amp; save trip
+    </button>
+    <div id="saved-toast" style="display:none; align-items:center; gap:8px; padding:10px 14px; background:var(--color-background-success); border-radius:var(--border-radius-md); margin-bottom:8px;">
+      <i class="ti ti-check" style="font-size:16px; color:var(--color-text-success);" aria-hidden="true"></i>
+      <span id="toast-msg" style="font-size:13px; color:var(--color-text-success);"></span>
+    </div>
+    <div id="results" style="display:none;">
+      <div style="border-top:0.5px solid var(--color-border-tertiary); padding-top:1.25rem; margin-bottom:0.75rem;">
+        <p style="font-size:12px; color:var(--color-text-secondary); margin:0; text-transform:uppercase; letter-spacing:0.06em; font-weight:500;">Results</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-bottom:12px;">
+        <div class="metric-card">
+          <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 2px;">Efficiency</p>
+          <p id="efficiency-val" style="font-size:22px; font-weight:500; margin:0; color:var(--color-text-primary);">—</p>
+        </div>
+        <div class="metric-card">
+          <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 2px;">Rating</p>
+          <span id="rating-badge" style="font-size:14px; font-weight:500; padding:4px 10px; border-radius:var(--border-radius-md); display:inline-block; width:fit-content; margin-top:2px;"></span>
+        </div>
+      </div>
+      <div id="cost-result" style="display:none; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-bottom:12px;">
+        <div class="metric-card">
+          <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 2px;">Cost per km</p>
+          <p id="cost-per-dist" style="font-size:22px; font-weight:500; margin:0; color:var(--color-text-primary);">—</p>
+        </div>
+        <div class="metric-card">
+          <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 2px;">Total cost</p>
+          <p id="total-cost" style="font-size:22px; font-weight:500; margin:0; color:var(--color-text-primary);">—</p>
+        </div>
+      </div>
+      <button onclick="resetAll()" style="width:100%; color:var(--color-text-secondary); border-color:var(--color-border-tertiary);">
+        <i class="ti ti-refresh" style="font-size:14px;" aria-hidden="true"></i>Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="tab-hist" style="display:none;">
+    <div id="hist-empty" style="text-align:center; padding:2.5rem 1rem;">
+      <i class="ti ti-history" style="font-size:32px; color:var(--color-text-tertiary); display:block; margin-bottom:12px;" aria-hidden="true"></i>
+      <p style="font-size:14px; color:var(--color-text-secondary); margin:0 0 4px;">No trips saved yet</p>
+      <p style="font-size:13px; color:var(--color-text-tertiary); margin:0;">Calculate a trip and it will appear here</p>
+    </div>
+    <div id="hist-content" style="display:none;">
+      <div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-bottom:10px;">
+        <div class="metric-card">
+          <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 2px;">Avg efficiency</p>
+          <p id="stat-avg-eff" style="font-size:20px; font-weight:500; margin:0; color:var(--color-text-primary);">—</p>
+        </div>
+        <div class="metric-card">
+          <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 2px;">Total distance</p>
+          <p id="stat-total-dist" style="font-size:20px; font-weight:500; margin:0; color:var(--color-text-primary);">—</p>
+        </div>
+      </div>
+      <div id="cost-stats-row" style="display:none; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-bottom:10px;">
+        <div class="metric-card" style="border:0.5px solid var(--color-border-tertiary);">
+          <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 2px;">Total fuel cost</p>
+          <p id="stat-total-cost" style="font-size:20px; font-weight:500; margin:0; color:var(--color-text-primary);">—</p>
+        </div>
+        <div class="metric-card" style="border:0.5px solid var(--color-border-tertiary);">
+          <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 2px;">Avg cost/km</p>
+          <p id="stat-avg-cpk" style="font-size:20px; font-weight:500; margin:0; color:var(--color-text-primary);">—</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; margin-top:4px;">
+        <p style="font-size:12px; color:var(--color-text-secondary); margin:0; text-transform:uppercase; letter-spacing:0.06em; font-weight:500;">Trips <span id="trip-count-label" style="font-weight:400;"></span></p>
+        <button onclick="clearHistory()" style="font-size:12px; color:var(--color-text-danger); padding:4px 8px; border-color:var(--color-border-danger); min-height:36px;">
+          <i class="ti ti-trash" style="font-size:13px; vertical-align:-2px; margin-right:3px;" aria-hidden="true"></i>Clear all
+        </button>
+      </div>
+      <div id="trip-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div id="tab-settings" style="display:none;">
+    <div style="margin-bottom:1.25rem;">
+      <p style="font-size:13px; color:var(--color-text-secondary); margin:0 0 1.25rem;">Set the minimum value for each rating. Each tier starts where the one below ends.</p>
+      <div style="display:flex; gap:4px; margin-bottom:1.25rem; background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:4px;">
+        <button class="tab-btn active" id="sbtn-km" onclick="setSettingsUnit('metric')">KM / Litre</button>
+        <button class="tab-btn inactive" id="sbtn-mi" onclick="setSettingsUnit('imperial')">Miles / Gallon</button>
+      </div>
+      <div class="field-card">
+        <div class="thresh-row">
+          <span style="font-size:12px; padding:3px 9px; border-radius:10px; background:#EAF3DE; color:#3B6D11; font-weight:500; min-width:68px; text-align:center;">Excellent</span>
+          <span style="font-size:12px; color:var(--color-text-secondary); flex:1;">≥</span>
+          <input class="thresh-input" id="t-excellent" type="number" min="1" step="1" inputmode="numeric" />
+          <span id="t-unit-1" style="font-size:13px; color:var(--color-text-secondary); min-width:28px;">km/L</span>
+        </div>
+        <div class="thresh-row">
+          <span style="font-size:12px; padding:3px 9px; border-radius:10px; background:#E1F5EE; color:#0F6E56; font-weight:500; min-width:68px; text-align:center;">Good</span>
+          <span style="font-size:12px; color:var(--color-text-secondary); flex:1;">≥</span>
+          <input class="thresh-input" id="t-good" type="number" min="1" step="1" inputmode="numeric" />
+          <span id="t-unit-2" style="font-size:13px; color:var(--color-text-secondary); min-width:28px;">km/L</span>
+        </div>
+        <div class="thresh-row">
+          <span style="font-size:12px; padding:3px 9px; border-radius:10px; background:#FAEEDA; color:#854F0B; font-weight:500; min-width:68px; text-align:center;">Average</span>
+          <span style="font-size:12px; color:var(--color-text-secondary); flex:1;">≥</span>
+          <input class="thresh-input" id="t-average" type="number" min="1" step="1" inputmode="numeric" />
+          <span id="t-unit-3" style="font-size:13px; color:var(--color-text-secondary); min-width:28px;">km/L</span>
+        </div>
+        <div class="thresh-row">
+          <span style="font-size:12px; padding:3px 9px; border-radius:10px; background:#FCEBEB; color:#A32D2D; font-weight:500; min-width:68px; text-align:center;">Low</span>
+          <span style="font-size:12px; color:var(--color-text-secondary); flex:1;">below Average</span>
+          <span style="font-size:13px; color:var(--color-text-tertiary); font-style:italic;">auto</span>
+          <span style="min-width:28px;"></span>
+        </div>
+      </div>
+      <div id="thresh-error" style="display:none; padding:8px 12px; background:var(--color-background-danger); border-radius:var(--border-radius-md); margin-top:10px;">
+        <p style="font-size:13px; color:var(--color-text-danger); margin:0;">Excellent must be &gt; Good &gt; Average. Please fix the values.</p>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button onclick="saveThresholds()" style="flex:1; font-weight:500;">Save thresholds</button>
+        <button onclick="resetThresholds()" style="color:var(--color-text-secondary); border-color:var(--color-border-tertiary); padding:0 14px;">
+          <i class="ti ti-refresh" style="font-size:14px; vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>Defaults
+        </button>
+      </div>
+      <div id="thresh-saved" style="display:none; align-items:center; gap:8px; padding:10px 14px; background:var(--color-background-success); border-radius:var(--border-radius-md); margin-top:10px;">
+        <i class="ti ti-check" style="font-size:16px; color:var(--color-text-success);" aria-hidden="true"></i>
+        <span style="font-size:13px; color:var(--color-text-success);">Thresholds saved — ratings updated.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Show install banner in Safari (not in standalone/installed mode) ──
+if (navigator.standalone === false && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+  document.getElementById('install-banner').style.display = 'flex';
+}
+
+// ── Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ── App state ──
+let unit = 'metric';
+let trips = [];
+let toastTimer = null;
+let settingsUnit = 'metric';
+
+const DEFAULTS = {
+  metric:   { excellent: 35, good: 25, average: 15 },
+  imperial: { excellent: 80, good: 55, average: 35 }
+};
+let thresholds = {
+  metric:   { ...DEFAULTS.metric },
+  imperial: { ...DEFAULTS.imperial }
+};
+
+// ── Persist trips to localStorage ──
+function saveTrips() {
+  try { localStorage.setItem('fuel-trips', JSON.stringify(trips)); } catch(e) {}
+}
+function loadTrips() {
+  try {
+    const raw = localStorage.getItem('fuel-trips');
+    if (raw) trips = JSON.parse(raw);
+  } catch(e) {}
+}
+function saveThresholdsToStorage() {
+  try { localStorage.setItem('fuel-thresholds', JSON.stringify(thresholds)); } catch(e) {}
+}
+function loadThresholdsFromStorage() {
+  try {
+    const raw = localStorage.getItem('fuel-thresholds');
+    if (raw) thresholds = JSON.parse(raw);
+  } catch(e) {}
+}
+
+// ── Init ──
+loadTrips();
+loadThresholdsFromStorage();
+updateHistCount();
+
+function showTab(tab) {
+  ['calc','hist','settings'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('nav-' + t).className = 'tab-btn ' + (t === tab ? 'active' : 'inactive');
+  });
+  if (tab === 'hist') renderHistory();
+  if (tab === 'settings') loadSettingsUI();
+}
+
+function setUnit(u) {
+  unit = u;
+  const isMetric = u === 'metric';
+  document.getElementById('dist-unit').textContent = isMetric ? 'km' : 'miles';
+  document.getElementById('fuel-unit').textContent = isMetric ? 'litres' : 'gallons';
+  document.getElementById('cost-unit').textContent = isMetric ? 'per litre' : 'per gallon';
+  document.getElementById('btn-km').className = 'tab-btn ' + (isMetric ? 'active' : 'inactive');
+  document.getElementById('btn-mi').className = 'tab-btn ' + (!isMetric ? 'active' : 'inactive');
+}
+
+function setSettingsUnit(u) {
+  settingsUnit = u;
+  document.getElementById('sbtn-km').className = 'tab-btn ' + (u === 'metric' ? 'active' : 'inactive');
+  document.getElementById('sbtn-mi').className = 'tab-btn ' + (u === 'imperial' ? 'active' : 'inactive');
+  loadSettingsUI();
+}
+
+function loadSettingsUI() {
+  const t = thresholds[settingsUnit];
+  document.getElementById('t-excellent').value = t.excellent;
+  document.getElementById('t-good').value = t.good;
+  document.getElementById('t-average').value = t.average;
+  const unitLabel = settingsUnit === 'metric' ? 'km/L' : 'mpg';
+  ['t-unit-1','t-unit-2','t-unit-3'].forEach(id => document.getElementById(id).textContent = unitLabel);
+  document.getElementById('thresh-error').style.display = 'none';
+  document.getElementById('thresh-saved').style.display = 'none';
+}
+
+function saveThresholds() {
+  const ex = parseFloat(document.getElementById('t-excellent').value);
+  const go = parseFloat(document.getElementById('t-good').value);
+  const av = parseFloat(document.getElementById('t-average').value);
+  const errEl = document.getElementById('thresh-error');
+  if (!ex || !go || !av || !(ex > go && go > av)) { errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  thresholds[settingsUnit] = { excellent: ex, good: go, average: av };
+  saveThresholdsToStorage();
+  const savedEl = document.getElementById('thresh-saved');
+  savedEl.style.display = 'flex';
+  setTimeout(() => savedEl.style.display = 'none', 2500);
+}
+
+function resetThresholds() {
+  thresholds[settingsUnit] = { ...DEFAULTS[settingsUnit] };
+  saveThresholdsToStorage();
+  loadSettingsUI();
+}
+
+function getRating(eff, u) {
+  const t = thresholds[u];
+  if (eff >= t.excellent) return { label: 'Excellent', bg: '#EAF3DE', color: '#3B6D11' };
+  if (eff >= t.good)      return { label: 'Good',      bg: '#E1F5EE', color: '#0F6E56' };
+  if (eff >= t.average)   return { label: 'Average',   bg: '#FAEEDA', color: '#854F0B' };
+  return                         { label: 'Low',        bg: '#FCEBEB', color: '#A32D2D' };
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('saved-toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.style.display = 'flex';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.style.display = 'none', 3000);
+}
+
+function calculate() {
+  const dist = parseFloat(document.getElementById('distance').value);
+  const fuel = parseFloat(document.getElementById('fuel').value);
+  const fuelPrice = parseFloat(document.getElementById('cost').value);
+  const results = document.getElementById('results');
+  if (!dist || !fuel || dist <= 0 || fuel <= 0) { results.style.display = 'none'; return; }
+
+  const isMetric = unit === 'metric';
+  const eff = dist / fuel;
+  const unitLabel = isMetric ? 'km/L' : 'mpg';
+  document.getElementById('efficiency-val').textContent = eff.toFixed(1) + ' ' + unitLabel;
+
+  const rating = getRating(eff, unit);
+  const badge = document.getElementById('rating-badge');
+  badge.textContent = rating.label;
+  badge.style.background = rating.bg;
+  badge.style.color = rating.color;
+
+  const hasCost = fuelPrice && fuelPrice > 0;
+  const costEl = document.getElementById('cost-result');
+  if (hasCost) {
+    const totalCost = fuel * fuelPrice;
+    const cpd = totalCost / dist;
+    document.getElementById('cost-per-dist').textContent = '₹' + cpd.toFixed(2) + (isMetric ? '/km' : '/mi');
+    document.getElementById('total-cost').textContent = '₹' + totalCost.toFixed(2);
+    costEl.style.display = 'grid';
+  } else { costEl.style.display = 'none'; }
+
+  results.style.display = 'block';
+
+  if (trips.length >= 10) trips.pop();
+  const now = new Date();
+  const name = document.getElementById('trip-name').value.trim() || 'Trip ' + (trips.length + 1);
+  const tripCost = hasCost ? fuel * fuelPrice : null;
+  trips.unshift({
+    id: Date.now(), name,
+    date: now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+    dist, fuel, eff, unitLabel,
+    distLabel: isMetric ? 'km' : 'mi',
+    fuelLabel: isMetric ? 'L' : 'gal',
+    fuelPrice: hasCost ? fuelPrice : null,
+    tripCost, costPerDist: hasCost ? tripCost / dist : null,
+    rating, unit
+  });
+
+  saveTrips();
+  updateHistCount();
+  showToast('Saved as "' + name + '" — ' + trips.length + '/10 trips');
+}
+
+function updateHistCount() {
+  const badge = document.getElementById('hist-count');
+  if (trips.length > 0) { badge.style.display = 'inline'; badge.textContent = trips.length; }
+  else badge.style.display = 'none';
+}
+
+function deleteTrip(id) { trips = trips.filter(t => t.id !== id); saveTrips(); updateHistCount(); renderHistory(); }
+function clearHistory() { trips = []; saveTrips(); updateHistCount(); renderHistory(); }
+
+function renderHistory() {
+  const empty = document.getElementById('hist-empty');
+  const content = document.getElementById('hist-content');
+  if (trips.length === 0) { empty.style.display = 'block'; content.style.display = 'none'; return; }
+  empty.style.display = 'none'; content.style.display = 'block';
+
+  document.getElementById('trip-count-label').textContent = '(' + trips.length + '/10)';
+  const avgEff = trips.reduce((a, t) => a + t.eff, 0) / trips.length;
+  const totalDist = trips.reduce((a, t) => a + t.dist, 0);
+  document.getElementById('stat-avg-eff').textContent = avgEff.toFixed(1) + ' ' + trips[0].unitLabel;
+  document.getElementById('stat-total-dist').textContent = totalDist.toFixed(0) + ' ' + trips[0].distLabel;
+
+  const tripsWithCost = trips.filter(t => t.tripCost !== null);
+  const costRow = document.getElementById('cost-stats-row');
+  if (tripsWithCost.length > 0) {
+    const totalCost = tripsWithCost.reduce((a, t) => a + t.tripCost, 0);
+    const totalDistC = tripsWithCost.reduce((a, t) => a + t.dist, 0);
+    document.getElementById('stat-total-cost').textContent = '₹' + totalCost.toFixed(2);
+    document.getElementById('stat-avg-cpk').textContent = '₹' + (totalCost / totalDistC).toFixed(2) + '/' + trips[0].distLabel;
+    costRow.style.display = 'grid';
+  } else { costRow.style.display = 'none'; }
+
+  document.getElementById('trip-list').innerHTML = trips.map(t => {
+    const costLine = t.tripCost
+      ? '<span style="font-size:12px; color:var(--color-text-secondary);">₹' + t.tripCost.toFixed(2) + ' total</span>' +
+        '<span style="font-size:12px; color:var(--color-text-secondary);">·</span>' +
+        '<span style="font-size:12px; color:var(--color-text-secondary);">₹' + t.costPerDist.toFixed(2) + '/' + t.distLabel + '</span>'
+      : '';
+    return '<div class="trip-row"><div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">' +
+      '<div style="flex:1; min-width:0;">' +
+        '<div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">' +
+          '<p style="font-size:14px; font-weight:500; margin:0; color:var(--color-text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + t.name + '</p>' +
+          '<span style="font-size:11px; color:var(--color-text-tertiary); white-space:nowrap;">' + t.date + '</span>' +
+        '</div>' +
+        '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">' +
+          '<span style="font-size:13px; font-weight:500; color:var(--color-text-primary);">' + t.eff.toFixed(1) + ' ' + t.unitLabel + '</span>' +
+          '<span style="font-size:11px; padding:2px 7px; border-radius:10px; background:' + t.rating.bg + '; color:' + t.rating.color + ';">' + t.rating.label + '</span>' +
+        '</div>' +
+        '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+          '<span style="font-size:12px; color:var(--color-text-secondary);">' + t.dist.toFixed(1) + ' ' + t.distLabel + '</span>' +
+          '<span style="font-size:12px; color:var(--color-text-secondary);">' + t.fuel.toFixed(2) + ' ' + t.fuelLabel + '</span>' +
+          costLine +
+        '</div>' +
+      '</div>' +
+      '<button onclick="deleteTrip(' + t.id + ')" aria-label="Delete trip" style="padding:4px 8px; border-color:var(--color-border-tertiary); color:var(--color-text-tertiary); flex-shrink:0; min-height:44px;"><i class="ti ti-trash" style="font-size:14px;" aria-hidden="true"></i></button>' +
+    '</div></div>';
+  }).join('');
+}
+
+function resetAll() {
+  ['distance','fuel','cost','trip-name'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('saved-toast').style.display = 'none';
+}
+</script>
+</body>
+</html>
